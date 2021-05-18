@@ -1,6 +1,6 @@
-# We.js S3 file storage plugin
+# We.js Google Clowd file storage plugin
 
-Add AWS S3 storage option for we.js file plugin
+Add GCS storage option for we.js file plugin
 
 ## Requirements:
 
@@ -10,7 +10,7 @@ Add AWS S3 storage option for we.js file plugin
 ## Installation:
 
 ```sh
-we i we-plugin-file-s3
+we i we-plugin-file-gcs
 ```
 
 ## Api
@@ -25,23 +25,22 @@ See **wejs/we-plugin-file**
   // ....
   apiKeys: {
     // configure AWS:
-    AWS: {
-      region: 'youregion',
-      accessKeyId: 'yourclientkey',
-      secretAccessKey: 'yoursecretkey',
-    },
-    //  Configure S3:
-    s3: {
-      bucket_name: 'bconext',
-      // // acl: ''
-    }
+      gcs: {
+        image_bucket_name: '',
+        file_bucket_name: '',
+        autoRetry: true,
+        maxRetries: 2,
+        projectId: '',
+        keyFilename: null,
+        acl: 'private'
+      }
   },
   // ....
 ```
 
 ## Roadmap 
 
-- Add support for resize images in amazon lambda
+- Add support for resize images in Google Clowd
 
 ## Links
 
