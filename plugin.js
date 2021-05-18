@@ -53,7 +53,6 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
               uniformBucketLevelAccess: we.config.apiKeys.gcs.uniformBucketLevelAccess,
 
-
               filename: function (req, file, callback) {
                 file.name = Date.now() + '_' + uuid.v1() + '.' + (file.originalname.split('.').pop().toLowerCase());
                 callback(null, file.name);
@@ -62,11 +61,9 @@ module.exports = function loadPlugin(projectPath, Plugin) {
               // contentType: (we.config.apiKeys.s3.contentType || multerS3.AUTO_CONTENT_TYPE),
 
               metadata: this.fileToUploadMetadata,
-
-              key(req, file, cb) {
-                cb(null, Date.now() + '_' + uuid.v1()) ;
-              }
             });
+
+            plugin.storage.getDestination = plugin.getDestination;
 
             return plugin.storage;
           },
@@ -96,11 +93,16 @@ module.exports = function loadPlugin(projectPath, Plugin) {
           destroyFile(file, done) {
             const we = plugin.we;
 
+            let fileName = file.urls.original.replace(
+              `https://storage.googleapis.com/${we.config.apiKeys.gcs.file_bucket_name}/`,
+              ''
+            );
+
             plugin.deleteFile({
               bucket: we.config.apiKeys.gcs.file_bucket_name,
               projectId: we.config.apiKeys.gcs.projectId,
               keyFilename: we.config.apiKeys.gcs.keyFilename,
-              fileName: file.name,
+              fileName,
             }, (err, data)=> {
               if (err) {
                 plugin.we.log.error('error on delete image from GCP:', data);
@@ -182,18 +184,17 @@ module.exports = function loadPlugin(projectPath, Plugin) {
               uniformBucketLevelAccess: we.config.apiKeys.gcs.uniformBucketLevelAccess,
 
               filename: function (req, file, callback) {
-                file.name = Date.now() + '_' + uuid.v1() + '.' + (file.originalname.split('.').pop().toLowerCase());
+                file.name = uuid.v1() + '.' + (file.originalname.split('.').pop().toLowerCase());
+
                 callback(null, file.name);
               },
 
               // contentType: (we.config.apiKeys.s3.contentType || multerS3.AUTO_CONTENT_TYPE),
 
               metadata: this.fileToUploadMetadata,
-
-              key(req, file, cb) {
-                cb(null, Date.now() + '_' + uuid.v1()) ;
-              }
             });
+
+            plugin.storage.getDestination = plugin.getDestination;
 
             return plugin.storage;
           },
@@ -320,6 +321,10 @@ module.exports = function loadPlugin(projectPath, Plugin) {
                 height = styleCfgs[style].heigth,
                 tempFile = path.resolve(os.tmpdir(), 'gcs_'+file.name+'_'+style);
 
+              const extraData = file.extraData;
+              extraData.keys.original = file.path;
+              file.extraData = extraData;
+
               // resize the image from stream:
               gm(originalImageStream)
               .resize(width, height, '^')
@@ -336,21 +341,19 @@ module.exports = function loadPlugin(projectPath, Plugin) {
                   projectId: we.config.apiKeys.gcs.projectId,
                   keyFilename: we.config.apiKeys.gcs.keyFilename,
                   filePath: tempFile,
-                  destination: style + '/' + file.name,
+                  destination: file.dateprefix + '/' + style + '/' + file.name,
                 },(err, data)=> {
                   if (err) {
                     we.log.error('Error on save image resized version in GCS', err);
                   } else {
                     const extraData = file.extraData;
-                    extraData.keys[style] = style + '/' + file.name;
+                    extraData.keys[style] = data.metadata.name;
                     file.extraData = extraData;
 
                     file.urls[style] = 'https://storage.googleapis.com/' +
                       data.metadata.bucket + '/'+
                       data.metadata.name;
                   }
-
-                  console.log('>file>', file);
 
                   fs.unlinkSync(tempFile);
 
@@ -376,6 +379,14 @@ module.exports = function loadPlugin(projectPath, Plugin) {
   plugin.fastLoader = function fastLoader(we, done) {
     done();
   };
+
+  plugin.getDestination = function getDestination(req, file, cb) {
+    const $now = plugin.we.utils.moment();
+
+    file.dateprefix = $now.format('YYYY/MM/DD');
+
+    cb( null, file.dateprefix + '/original' );
+  }
 
   plugin.uploadFile = function (opts, cb) {
     const gcs = new Storage({

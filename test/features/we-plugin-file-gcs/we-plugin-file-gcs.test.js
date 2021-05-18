@@ -44,6 +44,8 @@ describe('gcsStorage', function () {
           throw err;
         }
 
+        // console.log('result', res.body.file);
+
         assert(res.body.file);
         assert(res.body.file.urls.original);
         assert(res.body.file.mime);
@@ -141,7 +143,7 @@ describe('gcsStorage', function () {
         }
 
         assert(res.body.image.urls.thumbnail);
-        assert(res.body.image.urls.thumbnail.indexOf('https://www.googleapis.com/storage/') > -1);
+        assert(res.body.image.urls.thumbnail.indexOf('https://storage.googleapis.com/') > -1);
 
         done();
       });
