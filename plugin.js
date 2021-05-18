@@ -345,8 +345,12 @@ module.exports = function loadPlugin(projectPath, Plugin) {
                     extraData.keys[style] = style + '/' + file.name;
                     file.extraData = extraData;
 
-                    file.urls[style] = data.metadata.selfLink;
+                    file.urls[style] = 'https://storage.googleapis.com/' +
+                      data.metadata.bucket + '/'+
+                      data.metadata.name;
                   }
+
+                  console.log('>file>', file);
 
                   fs.unlinkSync(tempFile);
 
