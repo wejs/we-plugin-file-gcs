@@ -8,6 +8,7 @@ const uuid = require('uuid'),
   gm = require('gm'),
   path = require('path'),
   fs = require('fs'),
+  os = require('os'),
   multerGoogleStorage = require('multer-cloud-storage'),
   { Storage } = require('@google-cloud/storage');
 
@@ -317,7 +318,7 @@ module.exports = function loadPlugin(projectPath, Plugin) {
             we.utils.async.each(styles, function resizeEach(style, next) {
               const width = styleCfgs[style].width,
                 height = styleCfgs[style].heigth,
-                tempFile = path.resolve(process.cwd(), 'files' , 'gcs_'+file.name+'_'+style);
+                tempFile = path.resolve(os.tmpdir(), 'gcs_'+file.name+'_'+style);
 
               // resize the image from stream:
               gm(originalImageStream)
@@ -346,6 +347,8 @@ module.exports = function loadPlugin(projectPath, Plugin) {
 
                     file.urls[style] = data.metadata.selfLink;
                   }
+
+                  fs.unlinkSync(tempFile);
 
                   next(err);
                 })
