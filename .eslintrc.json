@@ -1,0 +1,16 @@
+{
+  "env": {
+    "node": true,
+    "es6": true,
+    "mocha": true
+  },
+  "rules": {
+    "no-await-in-loop": 0,
+    "global-require": 0,
+    "import/no-dynamic-require": 0,
+    "class-methods-use-this": 0,
+    "eslintno-param-reassign": 0,
+    "guard-for-in": 0,
+    "no-restricted-syntax": 0
+  }
+}
