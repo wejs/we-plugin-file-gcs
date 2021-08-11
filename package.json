@@ -33,6 +33,7 @@
   "files": [
     "files/public",
     "lib",
+    "commands",
     "locales",
     "server",
     "install.js",
